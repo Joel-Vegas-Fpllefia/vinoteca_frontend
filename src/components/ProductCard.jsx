@@ -5,30 +5,23 @@ const ProductCard = ({ producto, tipo }) => {
   const [cantidad, setCantidad] = useState(1);
 
   const handleAddToCart = async () => {
-    try {
-      // 1. Cambiamos la ruta a /cart/add que es la que espera el Backend
-      const response = await api.post('/cart/add', {
-        productoId: producto._id, // Asegúrate de que tu Backend use este nombre
-        tipo: tipo,               // 'vino' o 'cerveza'
-        cantidad: Number(cantidad)
-      });
+  try {
+    // 1. Usamos la ruta completa /cart/add
+    // 2. Usamos los nombres exactos: id_product y amount
+    const response = await api.post('/cart/add', {
+      id_product: producto._id, // Cambiado de productoId a id_product
+      amount: Number(cantidad)  // Cambiado de cantidad a amount
+    });
 
-      console.log("Respuesta del servidor:", response.data);
-      alert(`¡${producto.nom} añadido al carrito!`);
-      
-    } catch (err) {
-      console.error("Error completo:", err.response);
-      
-      // Si el error es 401, es que el token no es válido o expiró
-      if (err.response?.status === 401) {
-        alert("Tu sesión ha caducado. Por favor, vuelve a iniciar sesión.");
-      } else if (err.response?.status === 404) {
-        alert("Error 404: No se encontró la ruta /cart/add. Revisa el Backend.");
-      } else {
-        alert("No se pudo añadir al carrito. Inténtalo de nuevo.");
-      }
-    }
-  };
+    console.log("Respuesta:", response.data);
+    alert(`¡${producto.nom} añadido correctamente!`);
+    
+  } catch (err) {
+    // Si el error viene del if(!product_type), aquí verás "Producte no encontrat"
+    console.error("Error del servidor:", err.response?.data);
+    alert(err.response?.data?.error || "Error al añadir al carrito");
+  }
+};
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all p-4 flex flex-col h-full">
