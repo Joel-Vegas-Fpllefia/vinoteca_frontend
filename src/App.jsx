@@ -9,15 +9,19 @@ import AdminDashboard from './pages/AdminDashboard'; // Importa tu nuevo panel
 
 // --- COMPONENTE DE PROTECCIÓN ---
 const ProtectedRoute = ({ user, children }) => {
-  const rolesPermitidos = ['admin', 'editor'];
-  
-  // Si aún no sabemos si hay usuario (cargando), podrías retornar un loader
+  // DEBUG: Para ver qué rol detecta React al intentar entrar
+  console.log("Intento de acceso Admin. Usuario actual:", user);
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Si el rol no es el adecuado, lo mandamos al catálogo
-  if (!rolesPermitidos.includes(user.role)) {
+  // Convertimos a minúsculas por si acaso el backend devuelve 'Editor' o 'Admin'
+  const rol = user.role?.toLowerCase();
+  const esAutorizado = rol === 'admin' || rol === 'editor';
+
+  if (!esAutorizado) {
+    console.warn("Acceso denegado. Tu rol es:", rol);
     return <Navigate to="/" replace />;
   }
 

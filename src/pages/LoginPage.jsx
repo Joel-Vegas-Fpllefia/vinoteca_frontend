@@ -5,9 +5,28 @@ import { useNavigate, Link } from 'react-router-dom';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth(); // Traemos la función desde el AuthContext
-  const navigate = useNavigate();
+  // En tu AuthContext.jsx
+const login = async (email, password) => {
+  try {
+    const res = await api.post('/auth/login', { email, password });
+    
+    // IMPORTANTE: Tu backend devuelve 'usuari' con 'rol'
+    const userWithRol = res.data.usuari; 
 
+    // Guardamos en el estado del contexto
+    setUser(userWithRol); 
+
+    // Guardamos en localStorage para persistencia
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('user', JSON.stringify(userWithRol));
+
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};// Traemos la función desde el AuthContext
+  const navigate = useNavigate();
+    
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Intentando conectar con:", email);
