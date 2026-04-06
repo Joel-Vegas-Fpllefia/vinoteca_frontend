@@ -5,7 +5,19 @@ import { useNavigate, Link } from 'react-router-dom';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  // Dentro de AuthContext.jsx
+const login = async (email, password) => {
+  const res = await api.post('/auth/login', { email, password });
+  
+  // 1. Guardamos el usuario en el estado
+  setUser(res.data.user); 
+  
+  // 2. ¡MUY IMPORTANTE! Guardamos el token en localStorage
+  // Si tu API devuelve el token en res.data.token, asegúrate de que se llame 'token'
+  localStorage.setItem('token', res.data.token); 
+  
+  return res.data;
+};
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {

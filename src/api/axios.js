@@ -1,11 +1,19 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // SUSTITUYE por la URL real de tu backend en Vercel
   baseURL: 'https://vinacoteca-joel-vegas-romero-backen-nine.vercel.app',
-  headers: {
-    'Content-Type': 'application/json'
+  withCredentials: true
+});
+
+// Este interceptor añade el Token a TODAS las peticiones automáticamente
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token'); // Asegúrate de que el nombre coincide con el que usas en el Login
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export default api;
