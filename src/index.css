@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@config "../tailwind.config.js"; /* Esto vincula tu archivo de configuración */
+
+@layer base {
+  body {
+    @apply bg-stone-50 text-gray-900;
+  }
+}
