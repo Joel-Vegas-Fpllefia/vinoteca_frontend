@@ -20,14 +20,24 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
+    
+    // 1. Extraemos el token (Asegúrate de que tu backend lo envía así)
     const { token } = response.data;
+    
+    // 2. Guardamos en el almacén del navegador
     localStorage.setItem('token', token);
-    setUser({ logged: true });
+    
+    // 3. ¡ESTA ES LA CLAVE! Actualizamos Axios para que las 
+    // próximas peticiones (como el carrito) ya lleven el token
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    
+    setUser({ logged: true, ...response.data.user }); // Guardamos datos del user si vienen
     return response.data;
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization']; // Limpiamos Axios
     setUser(null);
   };
 

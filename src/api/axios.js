@@ -5,9 +5,9 @@ const api = axios.create({
   withCredentials: true
 });
 
-// Este interceptor añade el Token a TODAS las peticiones automáticamente
+// Interceptor para peticiones salientes
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token'); // Asegúrate de que el nombre coincide con el que usas en el Login
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
