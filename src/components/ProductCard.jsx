@@ -20,7 +20,7 @@ const ProductCard = ({ producto, tipo }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all p-4 flex flex-col h-full">
-      {/* IMAGEN */}
+      {/* IMAGEN (foto) */}
       <div className="h-48 w-full flex items-center justify-center mb-4 bg-gray-50 rounded-lg p-2">
         <img 
           src={producto.foto || 'https://via.placeholder.com/150'} 
@@ -41,13 +41,13 @@ const ProductCard = ({ producto, tipo }) => {
 
       {/* DESCRIPCIÓN (descripcio) */}
       <p className="text-sm text-gray-600 mb-4 h-10 overflow-hidden leading-tight italic">
-        {producto.descripcio || "Deliciosa bebida seleccionada especialmente para nuestra vinoteca."}
+        {producto.descripcio || "Sin descripción disponible."}
       </p>
       
       <div className="mt-auto border-t pt-4">
-        {/* PRECIO (preu o precio) */}
+        {/* PRECIO (Cambiado a 'price' que es lo que devuelve tu JSON) */}
         <p className="text-2xl font-black text-gray-800 mb-4">
-          {producto.preu || producto.precio || 15}€
+          {producto.price}€
         </p>
         
         <div className="flex items-center gap-2">
