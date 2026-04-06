@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
 const AdminDashboard = () => {
-  // 1. Mantenemos el estado inicial como arrays vacíos
   const [productos, setProductos] = useState({ vinos: [], cervezas: [] });
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('vinos');
@@ -10,24 +9,24 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // 1. Probamos las peticiones. 
+      // Si tu backend usa /api, cambia estas líneas a api.get('/api/vinos/')
       const [resVinos, resCervezas] = await Promise.all([
         api.get('/vinos/'),
         api.get('/cervezas/')
       ]);
 
-      // 2. BLINDAJE: Verificamos si la data es un array. 
-      // Si tu backend envía { vinos: [...] }, usa resVinos.data.vinos
-      const listaVinos = Array.isArray(resVinos.data) ? resVinos.data : (resVinos.data.vinos || []);
-      const listaCervezas = Array.isArray(resCervezas.data) ? resCervezas.data : (resCervezas.data.cervezas || []);
+      // DEBUG: Para que veas en la consola si llegan datos reales
+      console.log("Vinos:", resVinos.data);
+      console.log("Cervezas:", resCervezas.data);
 
-      setProductos({ 
-        vinos: listaVinos, 
-        cervezas: listaCervezas 
+      setProductos({
+        // 2. Validamos que lo que llegue sea un Array. Si no, ponemos []
+        vinos: Array.isArray(resVinos.data) ? resVinos.data : (resVinos.data.vinos || []),
+        cervezas: Array.isArray(resCervezas.data) ? resCervezas.data : (resCervezas.data.cervezas || [])
       });
-
     } catch (err) {
-      console.error("Error cargando datos de admin", err);
-      // En caso de error, reseteamos a arrays vacíos para que .map no explote
+      console.error("Error cargando datos:", err.response || err);
       setProductos({ vinos: [], cervezas: [] });
     } finally {
       setLoading(false);
@@ -41,86 +40,99 @@ const AdminDashboard = () => {
   const handleDelete = async (id, tipo) => {
     if (!window.confirm("¿Estás seguro de eliminar este producto?")) return;
     try {
-      const ruta = tipo === 'vinos' ? `/vinos/id/${id}` : `/cervezas/id/${id}`;
+      // Ajustado a tu endpoint: /cervezas/id/{id}
+      const ruta = `/${tipo}/id/${id}`;
       await api.delete(ruta);
-      alert("Producto eliminado");
+      alert("Eliminado correctamente");
       fetchData(); 
     } catch (err) {
-      alert("Error al eliminar");
+      alert("No se pudo eliminar. Revisa los permisos.");
     }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold">Cargando panel de control...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-800 mb-4"></div>
+      <p className="font-bold text-gray-600">Cargando inventario...</p>
+    </div>
+  );
 
-  // 3. ASEGURAMOS QUE listaActual SIEMPRE SEA UN ARRAY
   const listaActual = (tab === 'vinos' ? productos.vinos : productos.cervezas) || [];
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <header className="flex justify-between items-center mb-10">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 uppercase">Panel de Gestión</h1>
-          <p className="text-gray-500">Administración de Inventario Vinacoteca</p>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase">Panel de Gestión</h1>
+          <p className="text-gray-500 font-medium">Control de stock y productos</p>
         </div>
         <button 
-          className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 shadow-lg transition-all"
-          onClick={() => alert("Función no implementada todavía")}
+          className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 shadow-lg transition-all active:scale-95"
+          onClick={() => alert("Formulario de creación en desarrollo")}
         >
-          + Añadir Nuevo Producto
+          + Añadir {tab === 'vinos' ? 'Vino' : 'Cerveza'}
         </button>
       </header>
 
-      {/* TABS */}
-      <div className="flex gap-4 mb-8">
+      {/* SELECTOR DE CATEGORÍA */}
+      <div className="flex gap-2 mb-8 bg-gray-200 p-1 rounded-2xl w-fit">
         <button 
           onClick={() => setTab('vinos')}
-          className={`px-8 py-2 rounded-full font-bold transition-all ${tab === 'vinos' ? 'bg-red-800 text-white shadow-md' : 'bg-white text-gray-400 border'}`}
+          className={`px-10 py-2.5 rounded-xl font-bold transition-all ${tab === 'vinos' ? 'bg-white text-red-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          Vinos
+          🍷 Vinos
         </button>
         <button 
           onClick={() => setTab('cervezas')}
-          className={`px-8 py-2 rounded-full font-bold transition-all ${tab === 'cervezas' ? 'bg-yellow-600 text-white shadow-md' : 'bg-white text-gray-400 border'}`}
+          className={`px-10 py-2.5 rounded-xl font-bold transition-all ${tab === 'cervezas' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          Cervezas
+          🍺 Cervezas
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      {/* TABLA DE PRODUCTOS */}
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-900 text-white">
-              <th className="p-4 uppercase text-xs font-bold">Imagen</th>
-              <th className="p-4 uppercase text-xs font-bold">Nombre</th>
-              <th className="p-4 uppercase text-xs font-bold">Precio</th>
-              <th className="p-4 uppercase text-xs font-bold">Stock</th>
-              <th className="p-4 uppercase text-xs font-bold text-center">Acciones</th>
+            <tr className="bg-gray-50 border-b border-gray-100">
+              <th className="p-5 uppercase text-[10px] font-black text-gray-400 tracking-widest">Producto</th>
+              <th className="p-5 uppercase text-[10px] font-black text-gray-400 tracking-widest">Precio</th>
+              <th className="p-5 uppercase text-[10px] font-black text-gray-400 tracking-widest">Graduación</th>
+              <th className="p-5 uppercase text-[10px] font-black text-gray-400 tracking-widest text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            {/* 4. MAP SEGURO con Optional Chaining */}
-            {listaActual?.map((prod) => (
-              <tr key={prod._id} className="border-b hover:bg-gray-50 transition-colors">
-                <td className="p-4">
-                  <img src={prod.foto} className="w-12 h-12 object-contain bg-gray-100 rounded-lg" alt="" />
+          <tbody className="divide-y divide-gray-50">
+            {listaActual.map((prod) => (
+              <tr key={prod._id} className="hover:bg-gray-50/50 transition-colors group">
+                <td className="p-5">
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src={prod.foto} 
+                      className="w-14 h-14 object-cover rounded-xl bg-gray-100 group-hover:scale-110 transition-transform shadow-sm" 
+                      alt="" 
+                      onError={(e) => e.target.src = 'https://placehold.co/100x100?text=No+Imagen'}
+                    />
+                    <span className="font-bold text-gray-800 text-lg">{prod.nom}</span>
+                  </div>
                 </td>
-                <td className="p-4 font-bold text-gray-800">{prod.nom}</td>
-                <td className="p-4 font-mono">{prod.price || prod.precio}€</td>
-                <td className="p-4">
-                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${prod.stock < 5 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                    {prod.stock || 0} uds
-                   </span>
+                <td className="p-5">
+                  <span className="text-xl font-black text-gray-900">{prod.price}€</span>
                 </td>
-                <td className="p-4">
-                  <div className="flex justify-center gap-3">
-                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <td className="p-5">
+                  <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-black italic">
+                    {prod.graduacio || prod.graduacion || '0'}% VOL
+                  </span>
+                </td>
+                <td className="p-5">
+                  <div className="flex justify-center gap-2">
+                    <button className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
                     <button 
                       onClick={() => handleDelete(prod._id, tab)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -132,9 +144,12 @@ const AdminDashboard = () => {
             ))}
           </tbody>
         </table>
-        
+
         {listaActual.length === 0 && (
-          <div className="p-20 text-center text-gray-400 italic">No hay productos disponibles.</div>
+          <div className="py-24 text-center">
+             <span className="text-5xl block mb-4 opacity-20">📭</span>
+             <p className="text-gray-400 font-medium italic">No se han encontrado productos en la categoría {tab}.</p>
+          </div>
         )}
       </div>
     </div>
