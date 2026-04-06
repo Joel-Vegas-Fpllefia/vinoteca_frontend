@@ -9,24 +9,24 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Probamos las peticiones. 
-      // Si tu backend usa /api, cambia estas líneas a api.get('/api/vinos/')
       const [resVinos, resCervezas] = await Promise.all([
         api.get('/vinos/'),
         api.get('/cervezas/')
       ]);
 
-      // DEBUG: Para que veas en la consola si llegan datos reales
-      console.log("Vinos:", resVinos.data);
-      console.log("Cervezas:", resCervezas.data);
+      // Accedemos a .data.data porque tu backend envuelve el array en una propiedad 'data'
+      const listaVinos = resVinos.data?.data || [];
+      const listaCervezas = resCervezas.data?.data || [];
+
+      console.log("Vinos extraídos:", listaVinos);
+      console.log("Cervezas extraídas:", listaCervezas);
 
       setProductos({
-        // 2. Validamos que lo que llegue sea un Array. Si no, ponemos []
-        vinos: Array.isArray(resVinos.data) ? resVinos.data : (resVinos.data.vinos || []),
-        cervezas: Array.isArray(resCervezas.data) ? resCervezas.data : (resCervezas.data.cervezas || [])
+        vinos: listaVinos,
+        cervezas: listaCervezas
       });
     } catch (err) {
-      console.error("Error cargando datos:", err.response || err);
+      console.error("Error cargando datos:", err);
       setProductos({ vinos: [], cervezas: [] });
     } finally {
       setLoading(false);
