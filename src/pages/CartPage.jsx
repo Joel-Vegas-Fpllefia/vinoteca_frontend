@@ -23,23 +23,26 @@ const CartPage = () => {
   }, []);
 
   // 2. Editar cantidad (Suma o Resta)
-  const updateQuantity = async (id_del_articulo, newAmount) => {
-    if (newAmount < 1) return;
+  // 2. Editar cantidad (Suma o Resta)
+const updateQuantity = async (id_del_articulo, newAmount) => {
+  if (newAmount < 1) return;
 
-    try {
-      // Enviamos el objeto exacto que pide tu controlador: { id_product, amount }
-      await api.put('/cart/edit', { 
-        id_product: id_del_articulo, 
-        amount: Number(newAmount) 
-      });
-      
-      // Refrescamos los datos tras la edición
-      await fetchCart(); 
-    } catch (err) {
-      console.error("Error al editar:", err.response?.data);
-      alert("Error al actualizar la cantidad");
-    }
-  };
+  // IMPORTANTE: Asegúrate de que id_del_articulo no sea undefined
+  console.log("ID que enviamos al backend:", id_del_articulo);
+
+  try {
+    const res = await api.put('/cart/edit', { 
+      id_product: id_del_articulo, // Este debe ser el 'articleId'
+      amount: Number(newAmount) 
+    });
+    
+    await fetchCart(); 
+  } catch (err) {
+    // Si sale el error 500, aquí veremos qué dice el servidor
+    console.error("Error 500 detalles:", err.response?.data);
+    alert("Error al editar: " + (err.response?.data?.message || "Error interno"));
+  }
+};
 
   // 3. Eliminar producto
   const removeItem = async (id_del_articulo) => {
@@ -102,18 +105,16 @@ const CartPage = () => {
                 <div className="flex flex-col items-center gap-3">
                   <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200">
                     <button 
-                      onClick={() => updateQuantity(item.articleId, item.quantitat - 1)}
-                      className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:text-red-600 font-bold transition-colors">
-                      -
-                    </button>
-                    <span className="px-5 font-black text-gray-800 text-lg">
-                      {item.quantitat}
-                    </span>
-                    <button 
-                      onClick={() => updateQuantity(item.articleId, item.quantitat + 1)}
-                      className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:text-red-600 font-bold transition-colors">
-                      +
-                    </button>
+                        onClick={() => updateQuantity(item.articleId, item.quantitat - 1)}
+                        className="..."> - </button>
+
+                      <span className="px-5 font-black text-gray-800 text-lg">
+                        {item.quantitat}
+                      </span>
+
+                      <button 
+                        onClick={() => updateQuantity(item.articleId, item.quantitat + 1)}
+                        className="..."> + </button>
                   </div>
                   
                   <button 
