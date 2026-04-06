@@ -6,15 +6,27 @@ const ProductCard = ({ producto, tipo }) => {
 
   const handleAddToCart = async () => {
     try {
-      await api.post('/cart', {
-        productoId: producto._id,
-        tipo: tipo,
+      // 1. Cambiamos la ruta a /cart/add que es la que espera el Backend
+      const response = await api.post('/cart/add', {
+        productoId: producto._id, // Asegúrate de que tu Backend use este nombre
+        tipo: tipo,               // 'vino' o 'cerveza'
         cantidad: Number(cantidad)
       });
+
+      console.log("Respuesta del servidor:", response.data);
       alert(`¡${producto.nom} añadido al carrito!`);
+      
     } catch (err) {
-      console.error("Error al añadir al carrito", err);
-      alert("Debes iniciar sesión para añadir productos");
+      console.error("Error completo:", err.response);
+      
+      // Si el error es 401, es que el token no es válido o expiró
+      if (err.response?.status === 401) {
+        alert("Tu sesión ha caducado. Por favor, vuelve a iniciar sesión.");
+      } else if (err.response?.status === 404) {
+        alert("Error 404: No se encontró la ruta /cart/add. Revisa el Backend.");
+      } else {
+        alert("No se pudo añadir al carrito. Inténtalo de nuevo.");
+      }
     }
   };
 
