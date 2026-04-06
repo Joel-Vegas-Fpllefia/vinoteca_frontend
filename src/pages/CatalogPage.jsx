@@ -8,22 +8,29 @@ const CatalogPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resVinos, resCervezas] = await Promise.all([
-          api.get('/vinos'),
-          api.get('/cervezas')
-        ]);
-        setVinos(resVinos.data);
-        setCervezas(resCervezas.data);
-      } catch (err) {
-        console.error("Error cargando productos", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    setLoading(true);
+    
+    // Cargamos vinos
+    try {
+      const resVinos = await api.get('/vinos');
+      setVinos(resVinos.data);
+    } catch (err) {
+      console.error("Error cargando vinos:", err);
+    }
+
+    // Cargamos cervezas
+    try {
+      const resCervezas = await api.get('/cervezas');
+      setCervezas(resCervezas.data);
+    } catch (err) {
+      console.error("Error cargando cervezas:", err);
+    }
+
+    setLoading(false);
+  };
+  fetchData();
+}, []);
 
   if (loading) return <div className="text-center py-20 font-bold text-red-800">Cargando nuestra bodega...</div>;
 
