@@ -5,23 +5,26 @@ import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CartPage from './pages/CartPage';
-import AdminDashboard from './pages/AdminDashboard'; // Importa tu nuevo panel
+import AdminDashboard from './pages/AdminDashboard';
 
 // --- COMPONENTE DE PROTECCIÓN ---
-const ProtectedRoute = ({ user, children }) => {
-  // DEBUG: Para ver qué rol detecta React al intentar entrar
-  console.log("Intento de acceso Admin. Usuario actual:", user);
+const ProtectedRoute = ({ user, loading, children }) => {
+  // 1. Si aún estamos leyendo el localStorage, no hagas nada (espera)
+  if (loading) return null; 
+
+  // 2. DEBUG: Verifica que ahora sí salga 'editor'
+  console.log("Rol detectado en App.js:", user?.rol);
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Convertimos a minúsculas por si acaso el backend devuelve 'Editor' o 'Admin'
-  const rol = user.role?.toLowerCase();
-  const esAutorizado = rol === 'admin' || rol === 'editor';
+  // CORRECCIÓN: Usamos 'rol' (sin E) porque así viene de tu Backend/LocalStorage
+  const rolActual = user.rol?.toLowerCase();
+  const esAutorizado = rolActual === 'admin' || rolActual === 'editor';
 
   if (!esAutorizado) {
-    console.warn("Acceso denegado. Tu rol es:", rol);
+    console.warn("Acceso denegado. Tu rol es:", rolActual);
     return <Navigate to="/" replace />;
   }
 
@@ -29,21 +32,20 @@ const ProtectedRoute = ({ user, children }) => {
 };
 
 function App() {
-  // Estado para guardar el usuario logueado (puedes usar Context API si el proyecto crece)
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Añadimos estado de carga
 
-  // Efecto para recuperar el usuario del localStorage al recargar la página
   useEffect(() => {
-    const savedUser = localStorage.getItem('user'); // Asegúrate de guardar 'user' al hacer login
+    const savedUser = localStorage.getItem('user');
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+    setLoading(false); // Ya hemos terminado de mirar el localStorage
   }, []);
 
   return (
     <Router>
       <div className="min-h-screen bg-stone-50">
-        {/* Pasamos el usuario a la Navbar para mostrar/ocultar botones */}
         <Navbar user={user} />
         
         <Routes>
@@ -52,17 +54,15 @@ function App() {
           <Route path="/registro" element={<RegisterPage />} />
           <Route path="/carrito" element={<CartPage />} />
           
-          {/* RUTA PROTEGIDA PARA ADMIN/EDITOR */}
           <Route 
             path="/admin" 
             element={
-              <ProtectedRoute user={user}>
+              <ProtectedRoute user={user} loading={loading}>
                 <AdminDashboard />
               </ProtectedRoute>
             } 
           />
 
-          {/* Redirección por si entran a una ruta que no existe */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes> 
       </div>
