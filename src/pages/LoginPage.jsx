@@ -5,28 +5,21 @@ import { useNavigate, Link } from 'react-router-dom';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Dentro de AuthContext.jsx
-const login = async (email, password) => {
-  const res = await api.post('/auth/login', { email, password });
-  
-  // 1. Guardamos el usuario en el estado
-  setUser(res.data.user); 
-  
-  // 2. ¡MUY IMPORTANTE! Guardamos el token en localStorage
-  // Si tu API devuelve el token en res.data.token, asegúrate de que se llame 'token'
-  localStorage.setItem('token', res.data.token); 
-  
-  return res.data;
-};
+  const { login } = useAuth(); // Traemos la función desde el AuthContext
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Intentando conectar con:", email);
+
     try {
+      // Llamamos a la función login que viene del Contexto
       await login(email, password);
-      navigate('/'); // Nos lleva al inicio tras loguearnos
+      console.log("¡Login correcto!");
+      navigate('/'); 
     } catch (error) {
-      alert("Error al iniciar sesión: " + error.response?.data?.message);
+      console.error("Error en el componente Login:", error);
+      alert("Error al iniciar sesión: " + (error.response?.data?.message || "Credenciales incorrectas"));
     }
   };
 
@@ -34,6 +27,7 @@ const login = async (email, password) => {
     <div className="flex items-center justify-center min-h-[80vh]">
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-xl w-96 border border-gray-100">
         <h2 className="text-3xl font-bold text-center text-red-800 mb-6">Iniciar Sesión</h2>
+        
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
           <input 
@@ -44,6 +38,7 @@ const login = async (email, password) => {
             required
           />
         </div>
+
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
           <input 
@@ -54,11 +49,16 @@ const login = async (email, password) => {
             required
           />
         </div>
-        <button className="w-full bg-red-700 text-white p-3 rounded-lg font-bold hover:bg-red-800 transition">
+
+        <button 
+          type="submit" 
+          className="w-full bg-red-700 text-white p-3 rounded-lg font-bold hover:bg-red-800 transition active:scale-95"
+        >
           Entrar
         </button>
+
         <p className="mt-4 text-center text-sm">
-          ¿No tienes cuenta? <Link to="/register" className="text-red-700 font-bold hover:underline">Regístrate aquí</Link>
+          ¿No tienes cuenta? <Link to="/registro" className="text-red-700 font-bold hover:underline">Regístrate aquí</Link>
         </p>
       </form>
     </div>
