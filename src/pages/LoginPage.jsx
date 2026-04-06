@@ -5,40 +5,28 @@ import { useNavigate, Link } from 'react-router-dom';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // En tu AuthContext.jsx
-const login = async (email, password) => {
-  try {
-    const res = await api.post('/auth/login', { email, password });
-    
-    // IMPORTANTE: Tu backend devuelve 'usuari' con 'rol'
-    const userWithRol = res.data.usuari; 
-
-    // Guardamos en el estado del contexto
-    setUser(userWithRol); 
-
-    // Guardamos en localStorage para persistencia
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(userWithRol));
-
-    return res.data;
-  } catch (error) {
-    throw error;
-  }
-};// Traemos la función desde el AuthContext
+  
+  // Extraemos la función login del contexto. 
+  // NO la definimos aquí abajo, ya existe en AuthContext.js
+  const { login } = useAuth(); 
   const navigate = useNavigate();
-    
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Intentando conectar con:", email);
 
     try {
-      // Llamamos a la función login que viene del Contexto
+      // Usamos la función que viene del contexto
       await login(email, password);
+      
       console.log("¡Login correcto!");
-      navigate('/'); 
+      navigate('/'); // Redirigimos al inicio
     } catch (error) {
       console.error("Error en el componente Login:", error);
-      alert("Error al iniciar sesión: " + (error.response?.data?.message || "Credenciales incorrectas"));
+      
+      // Manejo de errores amigable
+      const mensajeError = error.response?.data?.error || "Credenciales incorrectas";
+      alert("Error al iniciar sesión: " + mensajeError);
     }
   };
 
@@ -51,10 +39,11 @@ const login = async (email, password) => {
           <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
           <input 
             type="email" 
-            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            placeholder="correo@ejemplo.com"
           />
         </div>
 
@@ -62,10 +51,11 @@ const login = async (email, password) => {
           <label className="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
           <input 
             type="password" 
-            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-red-500 text-black"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            placeholder="********"
           />
         </div>
 
@@ -76,7 +66,7 @@ const login = async (email, password) => {
           Entrar
         </button>
 
-        <p className="mt-4 text-center text-sm">
+        <p className="mt-4 text-center text-sm text-gray-600">
           ¿No tienes cuenta? <Link to="/registro" className="text-red-700 font-bold hover:underline">Regístrate aquí</Link>
         </p>
       </form>
