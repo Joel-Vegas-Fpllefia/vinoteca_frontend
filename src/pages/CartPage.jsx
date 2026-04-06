@@ -5,10 +5,11 @@ const CartPage = () => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 1. Cargar el carrito desde el Backend
   const fetchCart = async () => {
     try {
-      const res = await api.get('/cart'); 
-      console.log("Datos recibidos:", res.data);
+      const res = await api.get('/cart');
+      console.log("Datos del carrito recibidos:", res.data);
       setCart(res.data);
     } catch (err) {
       console.error("Error al obtener el carrito:", err);
@@ -21,97 +22,135 @@ const CartPage = () => {
     fetchCart();
   }, []);
 
-  const updateQuantity = async (id_product, newAmount) => {
+  // 2. Editar cantidad (Suma o Resta)
+  const updateQuantity = async (id_del_articulo, newAmount) => {
     if (newAmount < 1) return;
+
     try {
-      // Enviamos exactamente lo que tu destructuring espera: { id_product, amount }
+      // Enviamos el objeto exacto que pide tu controlador: { id_product, amount }
       await api.put('/cart/edit', { 
-        id_product: id_product, 
+        id_product: id_del_articulo, 
         amount: Number(newAmount) 
       });
-      fetchCart(); 
+      
+      // Refrescamos los datos tras la edición
+      await fetchCart(); 
     } catch (err) {
       console.error("Error al editar:", err.response?.data);
-      alert("Error al actualizar: " + (err.response?.data?.error || "Error interno"));
+      alert("Error al actualizar la cantidad");
     }
   };
 
-  const removeItem = async (id_product) => {
+  // 3. Eliminar producto
+  const removeItem = async (id_del_articulo) => {
     try {
-      // Algunos backends para DELETE necesitan el body dentro de 'data' en Axios
+      // El método DELETE en Axios requiere pasar el body dentro de la propiedad 'data'
       await api.delete('/cart/remove', { 
-        data: { id_product: id_product } 
+        data: { id_product: id_del_articulo } 
       });
-      fetchCart();
+      await fetchCart();
     } catch (err) {
       console.error("Error al eliminar:", err.response?.data);
       alert("No se pudo eliminar el producto");
     }
   };
 
-  if (loading) return <div className="text-center p-10 font-bold">Cargando tu selección...</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <p className="text-xl font-bold text-red-800 animate-pulse">Cargando tu bodega...</p>
+    </div>
+  );
 
-  // Adaptado a tu nueva estructura: res.data.productos
+  // Validación de seguridad para evitar el error de 'length'
   const tieneProductos = cart && cart.productos && cart.productos.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-3xl font-bold text-red-800 mb-8 border-b pb-4 text-center">Mi Bodega 🍷</h2>
+    <div className="max-w-5xl mx-auto p-6 min-h-screen">
+      <h2 className="text-4xl font-black text-red-900 mb-10 text-center uppercase tracking-tighter">
+        Mi Selección 🍷
+      </h2>
       
       {!tieneProductos ? (
-        <div className="bg-gray-50 p-10 rounded-xl text-center border-2 border-dashed">
-          <p className="text-gray-500 text-lg italic">El carrito está vacío. ¡Añade algún Reserva!</p>
+        <div className="bg-white p-16 rounded-3xl text-center shadow-inner border-2 border-dashed border-gray-200">
+          <p className="text-gray-400 text-lg">Tu carrito está vacío actualmente.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {cart.productos.map((item, index) => (
-            <div key={index} className="flex items-center gap-4 bg-white p-4 shadow-sm rounded-xl border border-gray-100">
-              {/* Imagen del producto */}
-              <img 
-                src={item.imagen} 
-                alt={item.nom} 
-                className="w-20 h-20 object-cover rounded-lg bg-gray-50"
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* LISTA DE PRODUCTOS */}
+          <div className="lg:col-span-2 space-y-4">
+            {cart.productos.map((item, index) => (
+              <div key={index} className="flex items-center gap-6 bg-white p-5 shadow-sm rounded-2xl border border-gray-100 hover:shadow-md transition-all">
+                
+                {/* Imagen */}
+                <img 
+                  src={item.imagen} 
+                  alt={item.nom} 
+                  className="w-24 h-24 object-cover rounded-xl bg-gray-50 border border-gray-100"
+                />
 
-              <div className="flex-1">
-                <h3 className="font-bold text-gray-900 text-lg">{item.nom}</h3>
-                <p className="text-sm text-gray-500">{item.preu_unitari}€ / unidad</p>
-                <p className="text-red-700 font-bold">Subtotal: {item.subtotal}€</p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                  <button 
-                    onClick={() => updateQuantity(item.articleId, item.quantitat - 1)}
-                    className="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm hover:text-red-600">-</button>
-                  <span className="px-4 font-black text-gray-700">{item.quantitat}</span>
-                  <button 
-                    onClick={() => updateQuantity(item.articleId, item.quantitat + 1)}
-                    className="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm hover:text-red-600">+</button>
+                {/* Detalles */}
+                <div className="flex-1">
+                  <h3 className="font-extrabold text-gray-900 text-xl leading-tight">{item.nom}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{item.preu_unitari}€ / unidad</p>
+                  <p className="text-red-700 font-bold bg-red-50 inline-block px-2 py-1 rounded-md text-sm">
+                    Subtotal: {item.subtotal}€
+                  </p>
                 </div>
                 
-                <button 
-                  onClick={() => removeItem(item.articleId)}
-                  className="text-gray-300 hover:text-red-600 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+                {/* Controles de cantidad */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200">
+                    <button 
+                      onClick={() => updateQuantity(item.articleId, item.quantitat - 1)}
+                      className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:text-red-600 font-bold transition-colors">
+                      -
+                    </button>
+                    <span className="px-5 font-black text-gray-800 text-lg">
+                      {item.quantitat}
+                    </span>
+                    <button 
+                      onClick={() => updateQuantity(item.articleId, item.quantitat + 1)}
+                      className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm hover:text-red-600 font-bold transition-colors">
+                      +
+                    </button>
+                  </div>
+                  
+                  <button 
+                    onClick={() => removeItem(item.articleId)}
+                    className="text-gray-400 hover:text-red-600 text-sm font-medium transition-colors flex items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Eliminar
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-          
-          {/* TOTAL FINAL */}
-          <div className="mt-8 bg-gray-900 p-6 rounded-2xl shadow-xl flex justify-between items-center text-white">
-             <div>
-               <p className="text-gray-400 text-sm uppercase tracking-widest">Total a pagar</p>
-               <p className="text-4xl font-black">{cart.granTotal}€</p>
-             </div>
-             <button className="bg-red-700 text-white px-10 py-4 rounded-xl font-black hover:bg-red-600 transition-all transform active:scale-95 shadow-lg">
-               FINALIZAR PEDIDO
-             </button>
+            ))}
           </div>
+
+          {/* RESUMEN DE PAGO */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-900 text-white p-8 rounded-3xl shadow-2xl sticky top-6">
+               <h4 className="text-gray-400 uppercase text-xs font-black tracking-widest mb-6">Resumen del pedido</h4>
+               
+               <div className="flex justify-between items-end mb-8">
+                 <span className="text-gray-400">Total a pagar:</span>
+                 <span className="text-5xl font-black text-white">{cart.granTotal}€</span>
+               </div>
+
+               <button className="w-full bg-red-700 text-white py-5 rounded-2xl font-black text-lg hover:bg-red-600 transition-all transform active:scale-95 shadow-xl flex justify-center items-center gap-2">
+                 <span>FINALIZAR PEDIDO</span>
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                 </svg>
+               </button>
+               
+               <p className="text-gray-500 text-[10px] text-center mt-6 uppercase">Pago seguro 100% garantizado</p>
+            </div>
+          </div>
+          
         </div>
       )}
     </div>
