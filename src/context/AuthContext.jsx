@@ -18,22 +18,31 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  // Frontend - AuthContext.js
+// AuthContext.js
+const login = async (email, password) => {
+  try {
     const response = await api.post('/auth/login', { email, password });
     
-    // 1. Extraemos el token (Asegúrate de que tu backend lo envía así)
-    const { token } = response.data;
-    
-    // 2. Guardamos en el almacén del navegador
+    // Desestructuramos lo que viene del backend (token y usuari)
+    const { token, usuari } = response.data;
+
+    // 1. Guardamos el token para que las peticiones tengan permiso
     localStorage.setItem('token', token);
-    
-    // 3. ¡ESTA ES LA CLAVE! Actualizamos Axios para que las 
-    // próximas peticiones (como el carrito) ya lleven el token
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+    // 2. Guardamos el objeto usuario (que ya trae el 'rol') en el almacenamiento local
+    localStorage.setItem('user', JSON.stringify(usuari));
     
-    setUser({ logged: true, ...response.data.user }); // Guardamos datos del user si vienen
+    // 3. Actualizamos el estado global para que React reaccione
+    setUser(usuari);
+
     return response.data;
-  };
+  } catch (error) {
+    // Si el backend lanza el 401 "Credencials incorrectes", aquí lo capturas
+    throw error;
+  }
+};
 
   const logout = () => {
     localStorage.removeItem('token');

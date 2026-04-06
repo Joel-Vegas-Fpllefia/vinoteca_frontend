@@ -10,8 +10,13 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  // Verificamos si el usuario tiene permisos de staff
-  const esStaff = user?.rol === 'admin' || user?.rol === 'editor';
+  // DEBUG: Borra esto cuando confirmes que funciona. 
+  // Te dirá en la consola qué rol tiene el usuario actual.
+  console.log("Usuario actual en Navbar:", user);
+
+  // Verificamos si el usuario tiene permisos (usamos 'rol' que viene del backend)
+  // Añadimos .toLowerCase() para evitar errores si en la DB está en mayúsculas
+  const esStaff = user?.rol?.toLowerCase() === 'admin' || user?.rol?.toLowerCase() === 'editor';
 
   return (
     <nav className="bg-red-900 text-white shadow-lg sticky top-0 z-50">
@@ -24,16 +29,16 @@ const Navbar = () => {
 
         {/* Enlaces Principales */}
         <div className="hidden md:flex items-center space-x-6 font-medium">
-          <a href="#vinos-section" className="hover:text-red-200 transition text-sm uppercase tracking-wider">Vinos</a>
-          <a href="#cervezas-section" className="hover:text-red-200 transition text-sm uppercase tracking-wider">Cervezas</a>
+          <a href="/#vinos-section" className="hover:text-red-200 transition text-sm uppercase tracking-wider">Vinos</a>
+          <a href="/#cervezas-section" className="hover:text-red-200 transition text-sm uppercase tracking-wider">Cervezas</a>
           
-          {/* --- BOTÓN PANEL ADMIN (Solo Staff) --- */}
+          {/* --- BOTÓN PANEL ADMIN (Solo si esStaff es true) --- */}
           {esStaff && (
             <Link 
               to="/admin" 
-              className="flex items-center gap-2 bg-amber-500 text-amber-950 px-4 py-1.5 rounded-lg hover:bg-amber-400 transition shadow-md font-black text-xs uppercase tracking-tighter"
+              className="flex items-center gap-2 bg-amber-500 text-amber-950 px-4 py-1.5 rounded-lg hover:bg-amber-400 transition shadow-md font-black text-xs uppercase tracking-tighter border-2 border-amber-600"
             >
-              ⚙️ <span className="hidden lg:inline">Panel Gestión</span>
+              ⚙️ <span>Panel Gestión</span>
             </Link>
           )}
 
@@ -46,10 +51,14 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="hidden sm:inline text-xs bg-red-950/50 px-4 py-2 rounded-full border border-red-800/50">
-                Hola, <span className="font-bold text-red-200">{user.nom || user.nombre || 'Usuario'}</span>
-                <span className="ml-2 opacity-50 text-[10px] uppercase">({user.rol})</span>
-              </span>
+              <div className="hidden sm:flex flex-col items-end leading-none">
+                <span className="text-xs text-red-200 font-bold">
+                  {user.email}
+                </span>
+                <span className="text-[10px] uppercase opacity-70 font-black tracking-widest text-amber-400">
+                  [{user.rol}]
+                </span>
+              </div>
               <button 
                 onClick={handleLogout}
                 className="bg-white text-red-900 px-4 py-2 rounded-md font-bold text-sm hover:bg-gray-100 transition active:scale-95 shadow-sm"
@@ -60,7 +69,7 @@ const Navbar = () => {
           ) : (
             <div className="flex items-center gap-4">
               <Link to="/login" className="hover:text-red-200 font-medium text-sm">Login</Link>
-              <Link to="/registro" className="bg-white text-red-900 px-4 py-2 rounded-md font-bold text-sm hover:bg-gray-100 transition shadow-sm">
+              <Link to="/registro" className="bg-white text-red-900 px-4 py-2 rounded-md font-bold text-sm hover:bg-gray-100 transition shadow-sm border border-gray-200">
                 Registro
               </Link>
             </div>
