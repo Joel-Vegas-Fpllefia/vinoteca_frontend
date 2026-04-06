@@ -47,18 +47,29 @@ const CartPage = () => {
 
   // 3. Eliminar producto
   const removeItem = async (id_product) => {
-    if (!id_product) return;
-    try {
-      // Recuerda: DELETE en Axios con body va dentro de 'data'
-      await api.delete('/cart/remove', { 
-        data: { id_product: id_product } 
-      });
-      await fetchCart();
-    } catch (err) {
-      console.error("❌ Error al eliminar:", err.response?.data);
-      alert("No se pudo eliminar el producto");
-    }
-  };
+  if (!id_product) return;
+
+  try {
+    // 1. Llamada al backend para borrar
+    await api.delete('/cart/remove', { 
+      data: { id_product: id_product } 
+    });
+
+    // 2. ACTUALIZACIÓN MANUAL DEL ESTADO (Para que desaparezca de la vista YA)
+    setCart(prevCart => ({
+      ...prevCart,
+      productos: prevCart.productos.filter(item => item.articleId !== id_product)
+    }));
+
+    // 3. Opcional: Recargar datos reales del servidor para actualizar el Gran Total
+    await fetchCart();
+
+    console.log("Producto eliminado y vista actualizada");
+  } catch (err) {
+    console.error("❌ Error al eliminar:", err);
+    alert("No se pudo eliminar el producto de la base de datos");
+  }
+};
 
   if (loading) return (
     <div className="flex justify-center items-center h-screen">
