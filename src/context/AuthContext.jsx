@@ -7,37 +7,51 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Al cargar la app, miramos si hay un token guardado
+  // --- 1. PERSISTENCIA AL RECARGAR (F5) ---
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      // Opcional: Aquí podrías hacer una petición al backend 
-      // para validar el token y traer los datos del usuario
-      setUser({ logged: true }); 
+    const savedUser = localStorage.getItem('user');
+
+    if (token && savedUser) {
+      // Re-inyectamos el token en Axios para que las peticiones no den 401
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Restauramos el objeto usuario (que ya contiene el 'rol')
+      setUser(JSON.parse(savedUser));
     }
     setLoading(false);
   }, []);
 
+  // --- 2. LOGIN MODIFICADO ---
   const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    
-    // 1. Extraemos el token (Asegúrate de que tu backend lo envía así)
-    const { token } = response.data;
-    
-    // 2. Guardamos en el almacén del navegador
-    localStorage.setItem('token', token);
-    
-    // 3. ¡ESTA ES LA CLAVE! Actualizamos Axios para que las 
-    // próximas peticiones (como el carrito) ya lleven el token
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    
-    setUser({ logged: true, ...response.data.user }); // Guardamos datos del user si vienen
-    return response.data;
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      
+      // Tu backend devuelve: { token, usuari: { id, email, rol } }
+      const { token, usuari } = response.data;
+
+      // Guardamos el token en LocalStorage y Axios
+      localStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // Guardamos el objeto usuario COMPLETO (con el rol) en LocalStorage
+      localStorage.setItem('user', JSON.stringify(usuari));
+      
+      // Actualizamos el estado global
+      setUser(usuari);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error en el proceso de Login:", error);
+      throw error;
+    }
   };
 
+  // --- 3. LOGOUT ---
   const logout = () => {
     localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization']; // Limpiamos Axios
+    localStorage.removeItem('user'); // Limpiamos también el objeto usuario
+    delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
