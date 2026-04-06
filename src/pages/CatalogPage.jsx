@@ -15,24 +15,21 @@ const CatalogPage = () => {
       // Cargamos vinos
       try {
         const resVinos = await api.get('/vinos');
-        // Nos aseguramos de que resVinos.data sea un array antes de setear
-        if (Array.isArray(resVinos.data)) {
-          setVinos(resVinos.data);
-        }
+        // REVISIÓN AQUÍ: Accedemos a .data.data porque tu API devuelve un objeto con la lista dentro
+        const listaVinos = resVinos.data.data || resVinos.data; 
+        setVinos(Array.isArray(listaVinos) ? listaVinos : []);
       } catch (err) {
         console.error("Error cargando vinos:", err);
-        setVinos([]); // En caso de error, dejamos el array vacío para que no explote el .map
       }
 
       // Cargamos cervezas
       try {
         const resCervezas = await api.get('/cervezas');
-        if (Array.isArray(resCervezas.data)) {
-          setCervezas(resCervezas.data);
-        }
+        // REVISIÓN AQUÍ: Lo mismo para las cervezas
+        const listaCervezas = resCervezas.data.data || resCervezas.data;
+        setCervezas(Array.isArray(listaCervezas) ? listaCervezas : []);
       } catch (err) {
         console.error("Error cargando cervezas:", err);
-        setCervezas([]); // Si da 401, se queda como array vacío y la web sigue viva
       }
 
       setLoading(false);
