@@ -1,19 +1,22 @@
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth(); // Usamos el hook del contexto
+  const { user, loading } = useAuth();
 
-  if (loading) return <div>Cargando...</div>;
+  // 1. Mientras estemos cargando el localStorage, no hacemos nada
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen text-red-800 font-bold">Verificando credenciales...</div>;
+  }
 
-  if (!user) {
+  // 2. DEBUG: Mira esto en la consola cuando te rebote
+  console.log("Guardia verificando usuario:", user);
+
+  // 3. Verificamos si hay usuario y si tiene el ROL adecuado
+  const esAutorizado = user?.rol === 'admin' || user?.rol === 'editor';
+
+  if (!user || !esAutorizado) {
+    console.warn("Acceso denegado: No hay usuario o el rol no es válido. Rol actual:", user?.rol);
     return <Navigate to="/login" replace />;
   }
 
-  // Comprobamos el campo 'rol' que viene de tu base de datos
-  const esAutorizado = user.rol === 'admin' || user.rol === 'editor';
-
-  if (!esAutorizado) {
-    console.warn("Acceso denegado. Rol detectado:", user.rol);
-    return <Navigate to="/" replace />;
-  }
-
+  // 4. Si todo está bien, adelante
   return children;
 };
