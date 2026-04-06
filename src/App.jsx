@@ -3,7 +3,7 @@ import Navbar from './components/Navbar';
 import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-
+import CartPage from './pages/CartPage'
 function App() {
   return (
     <Router>
