@@ -109,4 +109,4 @@ Si despliegas el frontend en Vercel, asegúrate de que el archivo `vercel.json` 
 
 ## ✒️ Autor
 
-- **Tu Nombre** — [Tu GitHub](https://github.com/tu-usuario)
+- **Joel Vegas Romero** — [Tu GitHub](https://github.com/Joel-Vegas-Fpllefia)
