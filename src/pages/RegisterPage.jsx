@@ -23,24 +23,29 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
 
-    // 1. Validación de contraseñas en el cliente
     if (formData.password !== formData.confirmPassword) {
       return setError('Las contraseñas no coinciden');
     }
 
+    // Creamos el objeto EXACTO que pide el backend
+    const usuarioAGuardar = {
+      nom: formData.nombre,  // 'nom' es lo que pide tu backend
+      email: formData.email,
+      password: formData.password
+    };
+
+    console.log("Enviando a la API:", usuarioAGuardar);
+
     try {
-      // 2. Llamada a la API enviando "nom" para que el Backend lo reconozca
-      await api.post('/auth/registro', {
-        nom: formData.nombre, // Cambiado de 'nombre' a 'nom' según tu backend
-        email: formData.email,
-        password: formData.password
-      });
+      const response = await api.post('/auth/registro', usuarioAGuardar);
+      console.log("Respuesta del servidor:", response.data);
       
-      alert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
+      alert('¡Cuenta creada con éxito!');
       navigate('/login'); 
     } catch (err) {
-      // Si el backend devuelve un error (ej: el email ya existe), lo mostramos
-      setError(err.response?.data?.message || 'Error al registrar el usuario');
+      // ESTO ES CLAVE: Imprime el error exacto que devuelve el backend
+      console.error("DETALLE DEL ERROR 400:", err.response?.data);
+      setError(err.response?.data?.message || 'Error en los datos enviados');
     }
   };
 
