@@ -21,23 +21,31 @@ const CartPage = () => {
     fetchCart();
   }, []);
 
-  // Nota: Asegúrate de que el backend use 'id_product' o el campo que corresponda
   const updateQuantity = async (id_product, newAmount) => {
     if (newAmount < 1) return;
     try {
-      await api.put('/cart/edit', { id_product, amount: newAmount });
+      // Enviamos exactamente lo que tu destructuring espera: { id_product, amount }
+      await api.put('/cart/edit', { 
+        id_product: id_product, 
+        amount: Number(newAmount) 
+      });
       fetchCart(); 
     } catch (err) {
-      alert("No se pudo actualizar");
+      console.error("Error al editar:", err.response?.data);
+      alert("Error al actualizar: " + (err.response?.data?.error || "Error interno"));
     }
   };
 
   const removeItem = async (id_product) => {
     try {
-      await api.delete('/cart/remove', { data: { id_product } });
+      // Algunos backends para DELETE necesitan el body dentro de 'data' en Axios
+      await api.delete('/cart/remove', { 
+        data: { id_product: id_product } 
+      });
       fetchCart();
     } catch (err) {
-      alert("No se pudo eliminar");
+      console.error("Error al eliminar:", err.response?.data);
+      alert("No se pudo eliminar el producto");
     }
   };
 
